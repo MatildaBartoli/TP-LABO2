@@ -1,0 +1,56 @@
+# -*- coding: utf-8 -*-
+"""
+Editor de Spyder
+
+Este es un archivo temporal.
+"""
+#%%importamos librerias
+import pandas as pd
+import numpy as np
+from inline_sql import sql,sql_val
+import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+
+#Importamos base de datos
+imagenes=pd.read_csv("/home/Estudiante/Escritorio/Tp labo/TMNIST_Data.csv")
+X=imagenes.iloc[:,2:]
+Y=imagenes.iloc[:,1]
+
+#%%
+img = np.array(X.iloc[1]).reshape((28,28))
+plt.imshow(img, cmap='gray')
+plt.show()
+img = np.array(X.iloc[3]).reshape((28,28))
+plt.imshow(img, cmap='gray')
+plt.show()
+img = np.array(X.iloc[4]).reshape((28,28))
+plt.imshow(img, cmap='gray')
+plt.show()
+img = np.array(X.iloc[38]).reshape((28,28))
+plt.imshow(img, cmap='gray')
+plt.show()
+
+#%% filtramos las imagenes del 0
+
+imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
+X_0=imagenes_0.iloc[:,2:]
+for i in range (0,10):
+    img = np.array(X_0.iloc[i]).reshape((28,28))
+    plt.imshow(img, cmap='gray')
+    plt.show()
+    
+#NOOOOOOO
+#%% separamos los datos
+imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
+imagenes_1= sql^"""SELECT * FROM imagenes WHERE labels=1"""
+imagenes_1_0= sql^"""SELECT * FROM imagenes_0 UNION
+                     SELECT * FROM imagenes_1"""
+                     
+X_10=imagenes_1_0.iloc[:,2:]
+Y_10=imagenes_1_0.iloc[:,1]
+X_10_train , X_10_test, Y_10_train , Y_10_test = train_test_split(X, Y, test_size = 0.3) # 70% para train y 30% para test
+#KNN = K nearest neighbors
+#%% momento IA
+model = KNeighborsClassifier(n_neighbors = 5) # modelo en abstracto
+model.fit(X_10_train, Y_10_train)
