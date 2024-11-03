@@ -91,18 +91,28 @@ for columna in X_10.columns:
 #miremos las columnas con maxima diferencia
     
 
-X_10_train , X_10_test, Y_10_train , Y_10_test = train_test_split(X_10, Y_10, test_size = 0.3) # 70% para train y 30% para test
+X_10_train , X_10_test, Y_10_train , Y_10_test = train_test_split(X_10, Y_10, test_size = 0.3,random_state=4) # 70% para train y 30% para test
 #KNN = K nearest neighbors
 #Tomemos atributos random peroo dentro de las columnas relevantes
 #pruebas con 3 atributos
+exactitud=[]
+random_seed_sample=[7,3,19,2,5,1]
 todas_las_columnas=[str(x) for x in range(1,785)]
+resultado=np.zeros((5,5))
+precisiones_promedio=[]
 for k in range (3,13,2):
-    print(f"\n\npruebas con modelo con {k} atributos:\n\n")
+
+    lista_de_precision=[]
     for i in range(5):
+        rn.seed(random_seed_sample[i])
         atributos= rn.sample(columnas_relevantes, k) #tomo k atributos relevantes
+        
         X_train_sample=X_10_train.iloc[:][atributos] # selecciono esas columnas de los elementos de train
+        
         X_10_test_reducido=X_10_test.iloc[:][atributos]
+        
         model = KNeighborsClassifier(n_neighbors = 5) # Creo el modelo en abstracto
+        
         model = model.fit(X_train_sample, Y_10_train)   #entreno el modelo
         
         prediccion=model.predict(X_10_test_reducido) #hago la prediccion
@@ -112,6 +122,7 @@ for k in range (3,13,2):
         for j in range(len(prediccion)):
             if(prediccion[j]==Y_10_test.iloc[i]):
                 aciertos+=1
-        
-        print(f"la precision en el intento {i+1} es: " + str(aciertos/len(prediccion)*100) +"%")
-        print(f"tomando los atributos {atributos} \n")
+        lista_de_precision.append(aciertos/len(prediccion)*100)
+    precisiones_promedio.append(sum(lista_de_precision)/5)
+
+print(precisiones_promedio)
