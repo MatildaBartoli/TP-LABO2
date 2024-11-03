@@ -7,11 +7,21 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 import random as rn
-#Importamos base de datos
-#dejo comentada mi carpeta xD asi no busco la ruta en cada pull
-#".\\TMNIST_Data.csv"
-imagenes=pd.read_csv(".\\TMNIST_Data.csv")
 
+#%%Importamos base de datos
+#dejo comentada mi carpeta xD asi no busco la ruta en cada pull
+#Emi
+#".\\TMNIST_Data.csv"
+#Sofi
+#"C:/Users/copag/Desktop/TP2_labo/TMNIST_Data.csv"
+imagenes=pd.read_csv(".\\TMNIST_Data.csv")
+#%%funciones  
+def columnas_relevantes(dataframe)->list:
+    columnas_relevantes=[]
+    for columna in dataframe.columns:
+        if sum((dataframe[columna]).apply(int))!=0:
+            columnas_relevantes.append(columna)    
+    return columnas_relevantes
 
 #%% Analisis exploratorio atributos relevantes
 
@@ -24,10 +34,8 @@ datos_muestra=muestra.iloc[:,2:]
 #no podemos sacar diferencias de ahi
 # Entonces las diferencias estan en los pixeles centrales, los distintos de 0
 #veamos las columnas distintas de 0
-columnas_relevantes=[]
-for columna in datos_muestra.columns:
-    if sum((datos_muestra[columna]).apply(int))!=0:
-        columnas_relevantes.append(columna)
+columnas_relevantes=columnas_relevantes(datos_muestra)
+
 
 #vemos que redujimos el problema a mas de la mitad, pasamos de 784 columnas a 236
 #nos interesan ver las diferencias entre ambas fotos
@@ -85,10 +93,7 @@ X_10=imagenes_1_0.iloc[:,2:]
 Y_10=imagenes_1_0.iloc[:,1]
 
 #calculamos columnas no borde
-columnas_relevantes=[]
-for columna in X_10.columns:
-    if sum(X_10[columna].apply(int)) != 0:
-        columnas_relevantes.append(columna)
+columnas_relevantes=columnas_relevantes(X_10)
 
 #miremos las columnas con maxima diferencia
     
@@ -98,13 +103,13 @@ X_10_train , X_10_test, Y_10_train , Y_10_test = train_test_split(X_10, Y_10, te
 #Tomemos atributos random peroo dentro de las columnas relevantes
 #pruebas con 3 atributos
 
-random_seed_sample=[7,3,19,2,5,1]
+random_seed_sample=[7,3,19]
 
-precisiones_promedio=[]
-for k in range (3,13,2):
+exactitud_promedio=[]
+for k in range (3,32,2):
 
-    lista_de_precision=[]
-    for i in range(5):
+    lista_de_exactitud=[]
+    for i in range(3):
         rn.seed(random_seed_sample[i])
         atributos= rn.sample(columnas_relevantes, k) #tomo k atributos relevantes
         
@@ -122,8 +127,59 @@ for k in range (3,13,2):
         for j in range(len(prediccion)):
             if(prediccion[j]==Y_10_test.iloc[j]):
                 aciertos+=1
-        lista_de_precision.append(aciertos/len(prediccion)*100)
-    precisiones_promedio.append(sum(lista_de_precision)/5)
+        lista_de_exactitud.append(aciertos/len(prediccion)*100)
+    exactitud_promedio.append(sum(lista_de_exactitud)/3)
 
+#%% grafiquemos promedio de exactitud
+
+fig, ax= plt.subplots()
+cantidad_de_atributos= [x for x in range(3,32,2)]
+ax.plot(cantidad_de_atributos,exactitud_promedio, marker="o")
+ax.set_xlabel("cantidad de atributos")
+ax.set_xticks([x for x in range(3,32,2)])
+ax.set_ylabel("porcentaje de exactitud")
+plt.ylim([70,100])
+plt.grid()
+#Este grafico tiene k_neighbours=5
 #%%
 
+cantidad_vecinos_exactitud={}
+for k in range(3,100,20):
+    exactitud_promedio=[]
+    for r in range (3,32,2):
+        lista_de_exactitud=[]
+        for i in range(3):
+            rn.seed(random_seed_sample[i])
+            atributos= rn.sample(columnas_relevantes, r) #tomo r atributos relevantes
+            
+            X_train_sample=X_10_train.iloc[:][atributos] # selecciono esas columnas de los elementos de train
+            
+            X_10_test_reducido=X_10_test.iloc[:][atributos]
+            
+            model = KNeighborsClassifier(n_neighbors = k) # Creo el modelo en abstracto
+            
+            model = model.fit(X_train_sample, Y_10_train)   #entreno el modelo
+            
+            prediccion=model.predict(X_10_test_reducido) #hago la prediccion
+            #calculo exactitud
+            aciertos=0
+            for j in range(len(prediccion)):
+                if(prediccion[j]==Y_10_test.iloc[j]):
+                    aciertos+=1
+            lista_de_exactitud.append(aciertos/len(prediccion)*100)
+        exactitud_promedio.append(sum(lista_de_exactitud)/3)
+    
+    cantidad_vecinos_exactitud[k]=exactitud_promedio
+#%%
+fig, ax= plt.subplots()
+cantidad_de_atributos= [x for x in range(3,32,2)]
+claves=list(cantidad_vecinos_exactitud.keys())
+color=["red","blue","green","m","crimson","darkseagreen"]
+for i in range(6):
+    ax.plot(cantidad_de_atributos,cantidad_vecinos_exactitud[claves[i]],color=color[i],marker="o" ,label=f"k={claves[i]}")
+    ax.legend()
+    ax.set_xlabel("cantidad de atributos")
+    ax.set_xticks([x for x in range(3,32,2)])
+    ax.set_ylabel("porcentaje de exactitud")
+    plt.ylim([70,100])
+    plt.grid()
