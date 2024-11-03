@@ -34,7 +34,7 @@ datos_muestra=muestra.iloc[:,2:]
 #no podemos sacar diferencias de ahi
 # Entonces las diferencias estan en los pixeles centrales, los distintos de 0
 #veamos las columnas distintas de 0
-columnas_relevantes=columnas_relevantes(datos_muestra)
+lista_columnas_relevantes=columnas_relevantes(datos_muestra)
 
 
 #vemos que redujimos el problema a mas de la mitad, pasamos de 784 columnas a 236
@@ -93,7 +93,7 @@ X_10=imagenes_1_0.iloc[:,2:]
 Y_10=imagenes_1_0.iloc[:,1]
 
 #calculamos columnas no borde
-columnas_relevantes=columnas_relevantes(X_10)
+lista_columnas_relevantes=columnas_relevantes(X_10)
 
 #miremos las columnas con maxima diferencia
     
@@ -111,7 +111,7 @@ for k in range (3,32,2):
     lista_de_exactitud=[]
     for i in range(3):
         rn.seed(random_seed_sample[i])
-        atributos= rn.sample(columnas_relevantes, k) #tomo k atributos relevantes
+        atributos= rn.sample(lista_columnas_relevantes, k) #tomo k atributos relevantes
         
         X_train_sample=X_10_train.iloc[:][atributos] # selecciono esas columnas de los elementos de train
         
@@ -150,7 +150,7 @@ for k in range(3,100,20):
         lista_de_exactitud=[]
         for i in range(3):
             rn.seed(random_seed_sample[i])
-            atributos= rn.sample(columnas_relevantes, r) #tomo r atributos relevantes
+            atributos= rn.sample(lista_columnas_relevantes, r) #tomo r atributos relevantes
             
             X_train_sample=X_10_train.iloc[:][atributos] # selecciono esas columnas de los elementos de train
             
@@ -175,7 +175,7 @@ fig, ax= plt.subplots()
 cantidad_de_atributos= [x for x in range(3,32,2)]
 claves=list(cantidad_vecinos_exactitud.keys())
 color=["red","blue","green","m","crimson","darkseagreen"]
-for i in range(6):
+for i in range(5):
     ax.plot(cantidad_de_atributos,cantidad_vecinos_exactitud[claves[i]],color=color[i],marker="o" ,label=f"k={claves[i]}")
     ax.legend()
     ax.set_xlabel("cantidad de atributos")
