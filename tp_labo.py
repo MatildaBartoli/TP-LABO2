@@ -77,11 +77,13 @@ for i in range (0,10):
 
 imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
 imagenes_1= sql^"""SELECT * FROM imagenes WHERE labels=1"""
+
 imagenes_1_0= sql^"""SELECT * FROM imagenes_0 UNION
                      SELECT * FROM imagenes_1"""
                      
 X_10=imagenes_1_0.iloc[:,2:]
 Y_10=imagenes_1_0.iloc[:,1]
+
 #calculamos columnas no borde
 columnas_relevantes=[]
 for columna in X_10.columns:
@@ -95,10 +97,9 @@ X_10_train , X_10_test, Y_10_train , Y_10_test = train_test_split(X_10, Y_10, te
 #KNN = K nearest neighbors
 #Tomemos atributos random peroo dentro de las columnas relevantes
 #pruebas con 3 atributos
-exactitud=[]
+
 random_seed_sample=[7,3,19,2,5,1]
-todas_las_columnas=[str(x) for x in range(1,785)]
-resultado=np.zeros((5,5))
+
 precisiones_promedio=[]
 for k in range (3,13,2):
 
@@ -118,11 +119,11 @@ for k in range (3,13,2):
         prediccion=model.predict(X_10_test_reducido) #hago la prediccion
         #calculo exactitud
         aciertos=0
-        
         for j in range(len(prediccion)):
-            if(prediccion[j]==Y_10_test.iloc[i]):
+            if(prediccion[j]==Y_10_test.iloc[j]):
                 aciertos+=1
         lista_de_precision.append(aciertos/len(prediccion)*100)
     precisiones_promedio.append(sum(lista_de_precision)/5)
 
-print(precisiones_promedio)
+#%%
+
