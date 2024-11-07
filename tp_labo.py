@@ -30,6 +30,21 @@ def calcular_exactitud(prediccion,test)->float:
         if(prediccion[j]==test.iloc[j]):
             aciertos+=1
     return aciertos/len(prediccion)
+
+def matriz_de_confusion(Y_test,prediccion):
+    categorias_vistas=[]
+    categorias_diferentes=0
+    for i in range(len(prediccion)):
+        if not(Y_test.iloc[i] in categorias_vistas):
+            categorias_vistas.append(Y_test.iloc[i])
+            categorias_diferentes+=1
+    
+    matriz=np.zeros([categorias_diferentes,categorias_diferentes])
+    for i in range(len(prediccion)):
+        matriz[Y_test.iloc[i]][prediccion[i]]+=1 
+        #aprovechamos que son numeros, sino habria que mapearlos con un diccionario
+    return matriz                
+            
 #%% Analisis exploratorio atributos relevantes
 
 #tomemos una muestra por ejemplo los 2 primeros
@@ -107,7 +122,10 @@ for k in range (3,32,2):
         for j in range(len(prediccion)):
             if(prediccion[j]==Y_10_test.iloc[j]):
                 aciertos+=1
-        lista_de_exactitud.append(aciertos/len(prediccion)*100)
+        #sabemos que se calcula con la matriz de confusion
+        #pero por un tema de complejidad temporal lo calculamos asi
+        lista_de_exactitud.append(aciertos/len(prediccion)*100) 
+                                                                                            
     exactitud_promedio.append(sum(lista_de_exactitud)/3)
 
 #%% grafiquemos promedio de exactitud
@@ -173,8 +191,8 @@ for k in range(1,11):
     model=model.fit(X_train, Y_train)
     prediccion=model.predict(X_test)
     lista_exactitud.append(calcular_exactitud(prediccion,Y_test)*100)
-
-
+#deberiamos considerar la precision promedio aun?
+a=matriz_de_confusion(Y_test,prediccion)
 
 #%% Grafico de exacctitud para arboles con distinta profundidad
 fig, ax= plt.subplots()
@@ -188,7 +206,11 @@ plt.ylim([0,100])
 plt.grid()
    
 #%% Cambiar hiperparametros
-criterio=["entropy","gini","info gain"]
+criterio=["entropy","gini"]
+for i in range(len(criterio)):
+    for j in range (1,11):
+#que imperparametros podemos variar? pensamos en profundidad y criterio
+
 
 
 
