@@ -4,7 +4,7 @@ import numpy as np
 from inline_sql import sql,sql_val
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split , KFold
 from sklearn import tree
 import seaborn as sns
 import random as rn
@@ -15,7 +15,7 @@ import random as rn
 #".\\TMNIST_Data.csv"
 #Sofi
 #"C:/Users/copag/Desktop/TP2_labo/TMNIST_Data.csv"
-imagenes=pd.read_csv("/home/Estudiante/Escritorio/Tp labo/TMNIST_Data.csv")
+imagenes=pd.read_csv(".\\TMNIST_Data.csv")
 #%%funciones  
 def columnas_relevantes(dataframe)->list:
     columnas_relevantes=[]
@@ -31,17 +31,17 @@ def calcular_exactitud(prediccion,test)->float:
             aciertos+=1
     return aciertos/len(prediccion)
 
-def matriz_de_confusion(Y_test,prediccion):
+def matriz_de_confusion(prediccion,test):
     categorias_vistas=[]
     categorias_diferentes=0
     for i in range(len(prediccion)):
-        if not(Y_test.iloc[i] in categorias_vistas):
-            categorias_vistas.append(Y_test.iloc[i])
+        if not(test.iloc[i] in categorias_vistas):
+            categorias_vistas.append(test.iloc[i])
             categorias_diferentes+=1
     
     matriz=np.zeros([categorias_diferentes,categorias_diferentes])
     for i in range(len(prediccion)):
-        matriz[Y_test.iloc[i]][prediccion[i]]+=1 
+        matriz[test.iloc[i]][prediccion[i]]+=1 
         #aprovechamos que son numeros, sino habria que mapearlos con un diccionario
     return matriz                
             
@@ -75,7 +75,6 @@ ax[2].set_title("diferencia entre ambas")
 imagenes_8=sql^"""SELECT * FROM imagenes WHERE labels=8"""
 imagenes_2=sql^"""SELECT * FROM imagenes WHERE labels=2"""
 imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
-imagenes_0=imagenes_0.iloc[:,2:]
 imagenes_8=imagenes_8.iloc[:,2:]
 imagenes_2=imagenes_2.iloc[:,2:]
 imagen_8_promedio=np.array([0 for _ in range(28*28)], dtype=float)
@@ -89,12 +88,10 @@ for index, row in imagenes_2.iterrows():
     imagen_2_promedio+=array
 
 imagen_8_promedio/=2990
-imagen_2_promedio/=2990
-fig, axs = plt.subplots(nrows=1, ncols=3)
-
-axs[0].imshow(imagen_8_promedio.reshape(28,28),cmap='gray')
-axs[1].imshow(imagen_2_promedio.reshape(28,28),cmap='gray')
-axs[2].imshow((abs(imagen_8_promedio-imagen_2_promedio)).reshape(28,28),cmap='gray')
+imagen_2_promedio/=2990 
+ax[0].imshow(imagen_8_promedio.reshape(28,28),cmap='gray')
+ax[1].imshow(imagen_2_promedio.reshape(28,28),cmap='gray')
+ax[2].imshow((abs(imagen_8_promedio-imagen_2_promedio)).reshape(28,28),cmap='gray')
 plt.tight_layout()
 #%% filtramos las imagenes del 0 y el 1
 
@@ -203,9 +200,9 @@ for i in range(5):
 X=imagenes.iloc[:,2:]
 Y=imagenes.iloc[:,1]
 
-X_train , X_test , Y_train, Y_test = train_test_split(X,Y,test_size=0.35 ,random_state=42)
-X_test, X_held_out, Y_test, Y_held_out= train_test_split(X_test,Y_test,test_size=0.005, random_state=21)
+X_dev, X_held_out, Y_dev, Y_held_out= train_test_split(X,Y,test_size=0.1, random_state=21)
 #%% Entrenamos el modelo
+X_train , X_test, Y_train, Y_test = train_test_split(X_dev,Y_dev, test_size=0.3, random_state=42)
 lista_exactitud=[]
 for k in range(1,11):
     model=tree.DecisionTreeClassifier(criterion="entropy",max_depth=k)
@@ -226,32 +223,62 @@ ax.set_yticks([y for y in range(0,110,10)])
 plt.ylim([0,100])
 plt.grid()
    
-#%% Cambiar hiperparametros
+#%%time Hacemos la variacion de parametros con el K-folding
 
-foldX_1_training=imagenes.iloc[int(29900/5):,2:]
-foldX_2_training=imagenes.iloc[int(29900/5):,2:]
-foldX_3_training=imagenes.iloc[int(2*29900/5):,2:]
-foldX_4_training=imagenes.iloc[int(3*29900/5):,2:]
-foldX_5_training=imagenes.iloc[int(4*29900/5):,2:]
-
-#%%
-foldY_1_training=pd.Series(imagenes.iloc[int(29900/5),1])
-#foldY_2_training=
-#foldY_3_training=
-#foldY_4_training=
-#foldY_5_training=
-
-#%%
 criterio=["entropy","gini"]
-exactitud_por_criterio=[]
-for c in range(2):
-    lista_exactitud=[]
-    for k in range(1,11,2):
-        model=tree.DecisionTreeClassifier(criterion=criterio[c],max_depth=k) #variamos criterio
-        model=model.fit(X_train, Y_train)
-        prediccion=model.predict(X_test)
-        lista_exactitud.append(calcular_exactitud(prediccion,Y_test)*100)
-    exactitud_por_criterio.append(lista_exactitud)
-#deberiamos considerar la precision promedio aun?
-#%%Graficos
+kf = KFold(n_splits=5)
+resultados_por_fold={} 
+folds={}
+fold=1
+#hacemos el k-fold
+for train_index, test_index in kf.split(X_dev):
+    X_train=X_dev.iloc[train_index,:] 
+    Y_train=Y_dev.iloc[train_index]
+    X_test=X_dev.iloc[test_index,:]
+    Y_test=Y_dev.iloc[test_index]
+
+    exactitud_por_criterio={} #vamos a guardar los resultados por criterio
+    for c in range(2):
+        lista_exactitud=[] #vamos a guardar la exactitud para las 10 profunidades
+        for k in range(1,11):
+            model=tree.DecisionTreeClassifier(criterion=criterio[c],max_depth=k) #variamos criterio
+            model=model.fit(X_train, Y_train) #entrenamos el modelo
+            prediccion=model.predict(X_test) #hacemos las predicciones
+            lista_exactitud.append(calcular_exactitud(prediccion,Y_test)*100) 
+            #calulamos y agregamos la exactidud a la lista
+        
+        exactitud_por_criterio[criterio[c]]=lista_exactitud
+    resultados_por_fold[fold]=exactitud_por_criterio
+    folds[fold]=(train_index, test_index)#guardamos los folds para reconstruir a nuestro mejor modelo luego
+    fold+=1
+
+#%%elejimos el mejor modelo
+maximo=0
+for fold in range(1,6): #revisamos los 5 folds
+    diccionario_exactitud_del_fold=resultados_por_fold[fold]
+    for criterio in diccionario_exactitud_del_fold.keys(): #revisamos por los 2 criterios
+        lista_exactitud=diccionario_exactitud_del_fold[criterio]
+        for i in range(10): # revisamos las 10 profundidades
+            if lista_exactitud[i]>maximo:
+                maximo=lista_exactitud[i]
+                mejor_profundidad=i+1
+                mejor_fold=fold
+                mejor_criterio=criterio
+                
+#veamos su performance
+model=tree.DecisionTreeClassifier(criterion=mejor_criterio,max_depth=mejor_profundidad)
+model=model.fit(X_dev.iloc[folds[mejor_fold][0],:],Y_dev.iloc[folds[mejor_fold][0]])
+prediccion=model.predict(X_dev.iloc[folds[mejor_fold][1],:])
+matriz_de_confusion_mejor_modelo=matriz_de_confusion(prediccion,Y_dev.iloc[folds[mejor_fold][1]])
+exactitud_mejor_modelo=calcular_exactitud(prediccion,Y_dev.iloc[folds[mejor_fold][1]])*100
+
+
+#%%Entrenamos al modelo con el held-out
+model=tree.DecisionTreeClassifier(criterion=mejor_criterio,max_depth=mejor_profundidad)
+model=model.fit(X_dev,Y_dev)
+prediccion=model.predict(X_held_out)
+matriz_de_confusion_held_out= matriz_de_confusion(prediccion,Y_held_out)
+exactitud_held_out= calcular_exactitud(prediccion,Y_held_out)*100
+
+
 
