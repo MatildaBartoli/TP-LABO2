@@ -74,7 +74,6 @@ ax[1].set_title("Imagen de un 2")
 ax[2].set_title("diferencia entre ambas")
 imagenes_8=sql^"""SELECT * FROM imagenes WHERE labels=8"""
 imagenes_2=sql^"""SELECT * FROM imagenes WHERE labels=2"""
-imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
 imagenes_8=imagenes_8.iloc[:,2:]
 imagenes_2=imagenes_2.iloc[:,2:]
 imagen_8_promedio=np.array([0 for _ in range(28*28)], dtype=float)
@@ -93,6 +92,14 @@ ax[0].imshow(imagen_8_promedio.reshape(28,28),cmap='gray')
 ax[1].imshow(imagen_2_promedio.reshape(28,28),cmap='gray')
 ax[2].imshow((abs(imagen_8_promedio-imagen_2_promedio)).reshape(28,28),cmap='gray')
 plt.tight_layout()
+#%%veamos unos ejemplos de las diferencias inter clases
+imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
+X_0=imagenes_0.iloc[:,2:]
+fig, ax =plt.subplots(1,2)
+ax[0].imshow(np.array(X_0.iloc[1,:]).reshape(28,28),cmap='gray')
+ax[1].imshow(np.array(X_0.iloc[3,:]).reshape(28,28),cmap='gray')
+
+
 #%% filtramos las imagenes del 0 y el 1
 
 imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
@@ -101,14 +108,15 @@ imagenes_1= sql^"""SELECT * FROM imagenes WHERE labels=1"""
 imagenes_1_0= sql^"""SELECT * FROM imagenes_0 UNION
                      SELECT * FROM imagenes_1"""
                      
-X_10=imagenes_1_0.iloc[:,2:]
-Y_10=imagenes_1_0.iloc[:,1]
+X_binario=imagenes_1_0.iloc[:,2:]
+Y_binario=imagenes_1_0.iloc[:,1]
 
 #calculamos columnas no borde
-lista_columnas_relevantes=columnas_relevantes(X_10)
-    
+lista_columnas_relevantes=columnas_relevantes(X_binario)
+
 #%% Separamos los datos en test y train, entrenamos el modelo y calculamos la exactitud
-X_10_train , X_10_test, Y_10_train , Y_10_test = train_test_split(X_10, Y_10, test_size = 0.3,random_state=4) # 70% para train y 30% para test
+X_binario_train , X_binario_test, Y_binario_train , Y_binario_test = train_test_split(X_binario, Y_binario, test_size = 0.3,random_state=4) 
+# 70% para train y 30% para test
 #KNN = K nearest neighbors
 #Tomemos atributos random peroo dentro de las columnas relevantes
 #pruebas con 3 atributos
@@ -124,23 +132,17 @@ for k in range (3,32,2):
         rn.seed(random_seed_sample[i])
         atributos= rn.sample(lista_columnas_relevantes, k) #tomo k atributos relevantes
         
-        X_train_sample=X_10_train.iloc[:][atributos] # selecciono esas columnas de los elementos de train
+        X_train_sample=X_binario_train.iloc[:][atributos] # selecciono esas columnas de los elementos de train
         
-        X_10_test_reducido=X_10_test.iloc[:][atributos]
+        X_binario_test_reducido=X_binario_test.iloc[:][atributos]
         
         model = KNeighborsClassifier(n_neighbors = 5) # Creo el modelo en abstracto
         
-        model = model.fit(X_train_sample, Y_10_train)   #entreno el modelo
+        model = model.fit(X_train_sample, Y_binario_train)   #entreno el modelo
         
-        prediccion=model.predict(X_10_test_reducido) #hago la prediccion
+        prediccion=model.predict(X_binario_test_reducido) #hago la prediccion
         #calculo exactitud
-        aciertos=0
-        for j in range(len(prediccion)):
-            if(prediccion[j]==Y_10_test.iloc[j]):
-                aciertos+=1
-        #sabemos que se calcula con la matriz de confusion
-        #pero por un tema de complejidad temporal lo calculamos asi
-        lista_de_exactitud.append(aciertos/len(prediccion)*100) 
+        lista_de_exactitud.append(calcular_exactitud(prediccion,Y_binario_test)*100) 
                                                                                             
     exactitud_promedio.append(sum(lista_de_exactitud)/3)
 
@@ -166,17 +168,17 @@ for k in range(3,100,20):
             rn.seed(random_seed_sample[i])
             atributos= rn.sample(lista_columnas_relevantes, r) #tomo r atributos relevantes
             
-            X_train_sample=X_10_train.iloc[:][atributos] # selecciono esas columnas de los elementos de train
+            X_train_sample=X_binario_train.iloc[:][atributos] # selecciono esas columnas de los elementos de train
             
-            X_10_test_reducido=X_10_test.iloc[:][atributos]
+            X_binario_test_reducido=X_binario_test.iloc[:][atributos]
             
             model = KNeighborsClassifier(n_neighbors = k) # Creo el modelo en abstracto
             
-            model = model.fit(X_train_sample, Y_10_train)   #entreno el modelo
+            model = model.fit(X_train_sample, Y_binario_train)   #entreno el modelo
             
-            prediccion=model.predict(X_10_test_reducido) #hago la prediccion
+            prediccion=model.predict(X_binario_test_reducido) #hago la prediccion
             
-            lista_de_exactitud.append(calcular_exactitud(prediccion,Y_10_test)*100)
+            lista_de_exactitud.append(calcular_exactitud(prediccion,Y_binario_test)*100)
         exactitud_promedio.append(sum(lista_de_exactitud)/3)
     
     cantidad_vecinos_exactitud[k]=exactitud_promedio
@@ -252,6 +254,7 @@ for train_index, test_index in kf.split(X_dev):
     folds[fold]=(train_index, test_index)#guardamos los folds para reconstruir a nuestro mejor modelo luego
     fold+=1
 
+
 #%%elejimos el mejor modelo
 maximo=0
 for fold in range(1,6): #revisamos los 5 folds
@@ -271,8 +274,28 @@ model=model.fit(X_dev.iloc[folds[mejor_fold][0],:],Y_dev.iloc[folds[mejor_fold][
 prediccion=model.predict(X_dev.iloc[folds[mejor_fold][1],:])
 matriz_de_confusion_mejor_modelo=matriz_de_confusion(prediccion,Y_dev.iloc[folds[mejor_fold][1]])
 exactitud_mejor_modelo=calcular_exactitud(prediccion,Y_dev.iloc[folds[mejor_fold][1]])*100
+#%%veamos la exactidud de los mejores modelos de cada criterio por folder
+mejores_modelos_por_fold={}
+for fold in range(1,6): #revisamos los 5 folds
+    diccionario_exactitud_del_fold=resultados_por_fold[fold]
+    mejores_modelos_por_criterio={}
+    for criterio in diccionario_exactitud_del_fold.keys(): #revisamos por los 2 criterios
+        lista_exactitud=diccionario_exactitud_del_fold[criterio]
+        mejores_modelos_por_criterio[criterio]=max(lista_exactitud)
+    mejores_modelos_por_fold[fold]=mejores_modelos_por_criterio
 
+exactitud_gini=[mejores_modelos_por_fold[fold]['gini'] for fold in mejores_modelos_por_fold.keys()]
+exactitud_entropia=[mejores_modelos_por_fold[fold]['entropy'] for fold in mejores_modelos_por_fold.keys()]
 
+diferencia=[exactitud_gini[i]-exactitud_entropia[i] for i in range(len(exactitud_entropia))]
+mayor_gini=[x for x in diferencia if x>0]
+mayor_entropia=[abs(x) for x in diferencia if x<0]
+fig, ax=plt.subplots()
+ancho_barra=0.3
+ax.bar([1,2,3,4,5],mayor_entropia)
+ax.set_ylabel("Diferencias de exactitud")
+ax.set_xlabel("Numero de folder")
+ax.set_xticks([1,2,3,4,5])
 #%%Entrenamos al modelo con el held-out
 model=tree.DecisionTreeClassifier(criterion=mejor_criterio,max_depth=mejor_profundidad)
 model=model.fit(X_dev,Y_dev)
