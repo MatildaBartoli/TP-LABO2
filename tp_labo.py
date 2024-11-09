@@ -81,6 +81,9 @@ ax[2].set_title("diferencia entre ambas")
 ax[0].imshow(imagen_8_promedio.reshape(28,28),cmap='gray')
 ax[1].imshow(imagen_2_promedio.reshape(28,28),cmap='gray')
 ax[2].imshow((abs(imagen_8_promedio-imagen_2_promedio)).reshape(28,28),cmap='gray')
+ax[0].axis("off")
+ax[1].axis("off")
+ax[2].axis("off")
 plt.tight_layout()
 #%%veamos unos ejemplos de las diferencias inter clases
 #elegimos las filas de la clase 0
@@ -91,8 +94,8 @@ X_0=imagenes_0.iloc[:,2:]
 fig, ax =plt.subplots(1,2)
 ax[0].imshow(np.array(X_0.iloc[1,:]).reshape(28,28),cmap='gray')
 ax[1].imshow(np.array(X_0.iloc[3,:]).reshape(28,28),cmap='gray')
-
-
+ax[0].axis("off")
+ax[1].axis("off")
 #%% filtramos las imagenes del 0 y el 1
 
 imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
