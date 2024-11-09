@@ -212,7 +212,7 @@ for k in range(1,11):
     prediccion=model.predict(X_test)
     lista_exactitud.append(calcular_exactitud(prediccion,Y_test)*100)
 #deberiamos considerar la precision promedio aun?
-a=matriz_de_confusion(Y_test,prediccion)
+a=matriz_de_confusion(prediccion,Y_test)
 
 #%% Grafico de exacctitud para arboles con distinta profundidad
 fig, ax= plt.subplots()
