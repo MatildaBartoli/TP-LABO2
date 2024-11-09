@@ -15,7 +15,7 @@ import random as rn
 #".\\TMNIST_Data.csv"
 #Sofi
 #"C:/Users/copag/Desktop/TP2_labo/TMNIST_Data.csv"
-imagenes=pd.read_csv(".\\TMNIST_Data.csv")
+imagenes=pd.read_csv("/home/Estudiante/Escritorio/Tp labo/TMNIST_Data.csv")
 #%%funciones  
 def columnas_relevantes(dataframe)->list:
     columnas_relevantes=[]
@@ -72,11 +72,30 @@ fig, ax= plt.subplots(1,3)
 ax[0].set_title("Imagen de un 8")
 ax[1].set_title("Imagen de un 2")
 ax[2].set_title("diferencia entre ambas")
-tercer_opcion=((muestra_0).apply(float)-(muestra_1).apply(float)).apply(abs)
-ax[2].imshow(np.array(tercer_opcion).reshape(28,28),cmap='gray')
-ax[0].imshow(np.array(muestra_1.apply(float)).reshape(28,28),cmap='gray')
-ax[1].imshow(np.array(muestra_0.apply(float)).reshape(28,28),cmap='gray')
+imagenes_8=sql^"""SELECT * FROM imagenes WHERE labels=8"""
+imagenes_2=sql^"""SELECT * FROM imagenes WHERE labels=2"""
+imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
+imagenes_0=imagenes_0.iloc[:,2:]
+imagenes_8=imagenes_8.iloc[:,2:]
+imagenes_2=imagenes_2.iloc[:,2:]
+imagen_8_promedio=np.array([0 for _ in range(28*28)], dtype=float)
+imagen_2_promedio=np.array([0 for _ in range(28*28)], dtype=float)
+for index, row in imagenes_8.iterrows():
+    array=np.array(row)
+    imagen_8_promedio+=array
+    
+for index, row in imagenes_2.iterrows():
+    array=np.array(row)
+    imagen_2_promedio+=array
 
+imagen_8_promedio/=2990
+imagen_2_promedio/=2990
+fig, axs = plt.subplots(nrows=1, ncols=3)
+
+axs[0].imshow(imagen_8_promedio.reshape(28,28),cmap='gray')
+axs[1].imshow(imagen_2_promedio.reshape(28,28),cmap='gray')
+axs[2].imshow((abs(imagen_8_promedio-imagen_2_promedio)).reshape(28,28),cmap='gray')
+plt.tight_layout()
 #%% filtramos las imagenes del 0 y el 1
 
 imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
@@ -179,12 +198,14 @@ for i in range(5):
     plt.grid()
     
 #%% Clasificación multiclase con arboles
+#%% Separamos los datos
 
 X=imagenes.iloc[:,2:]
 Y=imagenes.iloc[:,1]
 
 X_train , X_test , Y_train, Y_test = train_test_split(X,Y,test_size=0.35 ,random_state=42)
 X_test, X_held_out, Y_test, Y_held_out= train_test_split(X_test,Y_test,test_size=0.005, random_state=21)
+#%% Entrenamos el modelo
 lista_exactitud=[]
 for k in range(1,11):
     model=tree.DecisionTreeClassifier(criterion="entropy",max_depth=k)
@@ -206,16 +227,31 @@ plt.ylim([0,100])
 plt.grid()
    
 #%% Cambiar hiperparametros
+
+foldX_1_training=imagenes.iloc[int(29900/5):,2:]
+foldX_2_training=imagenes.iloc[int(29900/5):,2:]
+foldX_3_training=imagenes.iloc[int(2*29900/5):,2:]
+foldX_4_training=imagenes.iloc[int(3*29900/5):,2:]
+foldX_5_training=imagenes.iloc[int(4*29900/5):,2:]
+
+#%%
+foldY_1_training=pd.Series(imagenes.iloc[int(29900/5),1])
+#foldY_2_training=
+#foldY_3_training=
+#foldY_4_training=
+#foldY_5_training=
+
+#%%
 criterio=["entropy","gini"]
-for i in range(len(criterio)):
-    for j in range (1,11):
-#que imperparametros podemos variar? pensamos en profundidad y criterio
-
-
-
-
-
-
-
-
+exactitud_por_criterio=[]
+for c in range(2):
+    lista_exactitud=[]
+    for k in range(1,11,2):
+        model=tree.DecisionTreeClassifier(criterion=criterio[c],max_depth=k) #variamos criterio
+        model=model.fit(X_train, Y_train)
+        prediccion=model.predict(X_test)
+        lista_exactitud.append(calcular_exactitud(prediccion,Y_test)*100)
+    exactitud_por_criterio.append(lista_exactitud)
+#deberiamos considerar la precision promedio aun?
+#%%Graficos
 
