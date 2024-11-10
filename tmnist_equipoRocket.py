@@ -28,13 +28,9 @@ import random as rn
 
 
 #%%===========================================================================
-# IMPORTACIÓN DE BASE DE DATOS
+# IMPORTACIÓN DE LA BASE DE DATOS
 #=============================================================================
-#dejo comentada mi carpeta xD asi no busco la ruta en cada pull
-#Emi
-#".\\TMNIST_Data.csv"
-#Sofi
-#"C:/Users/copag/Desktop/TP2_labo/TMNIST_Data.csv"
+
 imagenes=pd.read_csv("/Users/Usuario/Downloads/TP-LABO2/TMNIST_Data.csv")
 
 
@@ -132,7 +128,7 @@ ax[0].imshow(np.array(X_0.iloc[1,:]).reshape(28,28),cmap='gray')
 ax[1].imshow(np.array(X_0.iloc[3,:]).reshape(28,28),cmap='gray')
 ax[0].axis("off")
 ax[1].axis("off")
-
+plt.show()
 
 #%%===========================================================================
 # CLASIFICACIÓN BINARIA
@@ -156,7 +152,7 @@ lista_columnas_relevantes=columnas_relevantes(X_binario)
 #%% Separamos los datos en test y train, entrenamos el modelo y calculamos la exactitud
 
 #Tomamos las columnas distintas de 0 de X_binario 
-X_binario_relevante=X_binario[columnas_relevantes(X_binario)]
+X_binario_relevante=X_binario[lista_columnas_relevantes]
 
 #Separamos en train y test (70% para train y 30% para test)
 X_binario_train , X_binario_test, Y_binario_train , Y_binario_test = train_test_split(X_binario_relevante, Y_binario, test_size = 0.3,random_state=4) 
@@ -204,7 +200,7 @@ ax.set_xticks([x for x in range(3,32,2)])
 ax.set_ylabel("Exactitud(%)")
 plt.ylim([60,100])
 plt.grid()
-
+plt.show()
 
 #%%Calculo de exactitud para distinta cantidad de vecinos y atributos
 
@@ -256,7 +252,8 @@ for i in range(6):
     ax.set_ylabel("Exactitud (%)")
     plt.ylim([60,100])
     
-plt.grid()    
+plt.grid() 
+plt.show()   
 
 
 #%%===========================================================================
@@ -298,6 +295,7 @@ ax.set_ylabel("Exactitud (%)")
 ax.set_yticks([y for y in range(0,110,10)])
 plt.ylim([0,100])
 plt.grid()
+plt.show()
    
 #%%Hacemos la variación de parametros y profundidad con el K-folding
 
@@ -397,6 +395,7 @@ ax.bar([1,2,3,4,5],mayor_entropia)
 ax.set_ylabel("Diferencias de exactitud (%)")
 ax.set_xlabel("Numero de folder")
 ax.set_xticks([1,2,3,4,5])
+plt.show()
 #%%Entrenamos al modelo con el held-out
 
 model=tree.DecisionTreeClassifier(criterion=mejor_criterio,max_depth=mejor_profundidad)
