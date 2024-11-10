@@ -297,7 +297,7 @@ plt.ylim([0,100])
 plt.grid()
 plt.show()
    
-#%%Hacemos la variación de parametros y profundidad con el K-folding
+#%%Hacemos la variación de criterio y profundidad con el K-folding
 
 criterio=["entropy","gini"] 
 kf = KFold(n_splits=5) #realizamos el k-fold
@@ -367,7 +367,7 @@ for fold in range(1,6): #revisamos los 5 folds
         for i in range(10): # revisamos las 10 profundidades
             exactitud_promedio_k_folding+=lista_exactitud[i]/100 #hacemos el promedio sobre los 100 modelos que entrenamos
 
-#%%Vemos la exactidud de los mejores modelos de cada criterio por folder
+#%%Vemos la exactitud de los mejores modelos de cada criterio por folder
 mejores_modelos_por_fold={}
 for fold in range(1,6): #revisamos los 5 folds
     diccionario_exactitud_del_fold=resultados_por_fold[fold]
