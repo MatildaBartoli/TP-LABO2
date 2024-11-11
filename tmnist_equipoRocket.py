@@ -66,7 +66,7 @@ def matriz_de_confusion(prediccion,test):
     matriz=np.zeros([categorias_diferentes,categorias_diferentes])
     for i in range(len(prediccion)):
         matriz[test.iloc[i]][prediccion[i]]+=1 
-        #la fila es del numero real y la columna la da la prediccion
+        #la fila es del numero real y la columna la da la predicción
     return matriz                
  
            
@@ -202,7 +202,7 @@ plt.ylim([60,100])
 plt.grid()
 plt.show()
 
-#%%Calculo de exactitud para distinta cantidad de vecinos y atributos
+#%%Cálculo de exactitud para distinta cantidad de vecinos y atributos
 
 #donde vamos a guardar la exactitud promedio para cada cantidad de vecinos y atributos
 cantidad_vecinos_exactitud={}
@@ -335,7 +335,7 @@ for train_index, test_index in kf.split(X_dev):
     fold+=1
 
 
-#%%Elejimos el mejor modelo
+#%%Elegimos el mejor modelo
 maximo=0 
 for fold in range(1,6): #revisamos los 5 folds
     diccionario_exactitud_del_fold=resultados_por_fold[fold]
@@ -397,6 +397,7 @@ ax.set_xlabel("Numero de folder")
 ax.set_xticks([1,2,3,4,5])
 ax.legend()
 plt.show()
+
 #%%Entrenamos al modelo con el held-out
 
 model=tree.DecisionTreeClassifier(criterion=mejor_criterio,max_depth=mejor_profundidad)
