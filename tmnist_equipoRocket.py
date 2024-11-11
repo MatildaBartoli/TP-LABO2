@@ -30,8 +30,8 @@ import random as rn
 #%%===========================================================================
 # IMPORTACIÓN DE LA BASE DE DATOS
 #=============================================================================
-
-imagenes=pd.read_csv("/Users/Usuario/Downloads/TP-LABO2/TMNIST_Data.csv")
+#/Users/Usuario/Downloads/TP-LABO2/TMNIST_Data.csv
+imagenes=pd.read_csv(".\\TMNIST_Data.csv")
 
 
 #%%===========================================================================
@@ -385,16 +385,17 @@ diferencia=[exactitud_gini[i]-exactitud_entropia[i] for i in range(len(exactitud
 
 #Separamos por los que fue mayor gini o entropia
 #notemos que es una lista vacia,significa que entropia fue mejor en cada fold
-mayor_gini=[x for x in diferencia if x>0]
-mayor_entropia=[abs(x) for x in diferencia if x<0]
+mayor_gini=[diferencia[i] if diferencia[i] > 0 else 0 for i in range(len(diferencia))]
+mayor_entropia=[abs(diferencia[i]) if diferencia[i] < 0 else 0 for i in range(len(diferencia))]
 
 #Graficamos
 fig, ax=plt.subplots()
-ancho_barra=0.3
-ax.bar([1,2,3,4,5],mayor_entropia)
+ax.bar([1,2,3,4,5],mayor_entropia, label="entropia")
+ax.bar([1,2,3,4,5],mayor_gini,label="gini")
 ax.set_ylabel("Diferencias de exactitud (%)")
 ax.set_xlabel("Numero de folder")
 ax.set_xticks([1,2,3,4,5])
+ax.legend()
 plt.show()
 #%%Entrenamos al modelo con el held-out
 
