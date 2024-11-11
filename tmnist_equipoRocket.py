@@ -122,7 +122,7 @@ imagenes_0= sql^"""SELECT * FROM imagenes WHERE labels=0"""
 #Separamos las imagenes de esas filas
 X_0=imagenes_0.iloc[:,2:]
 
-#Realizamos el grafico de 2 ceros para ilustrar las diferencias
+#Realizamos el gráfico de 2 ceros para ilustrar las diferencias
 fig, ax =plt.subplots(1,2)
 ax[0].imshow(np.array(X_0.iloc[1,:]).reshape(28,28),cmap='gray')
 ax[1].imshow(np.array(X_0.iloc[3,:]).reshape(28,28),cmap='gray')
