@@ -402,7 +402,7 @@ plt.show()
 
 model=tree.DecisionTreeClassifier(criterion=mejor_criterio,max_depth=mejor_profundidad)
 model=model.fit(X_dev,Y_dev)
-prediccion=model.predict(X_held_out) #hacemos la prediccion
+prediccion=model.predict(X_held_out) #hacemos la predicción
 
 #Calculamos la exactitud y matriz de confusion con el conjunto held out
 exactitud_held_out=calcular_exactitud(prediccion,Y_held_out)*100
