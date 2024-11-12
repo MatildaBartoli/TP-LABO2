@@ -23,7 +23,6 @@ import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split , KFold
 from sklearn import tree
-import seaborn as sns
 import random as rn
 
 
