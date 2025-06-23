@@ -25,6 +25,4 @@ from sklearn import tree
 Name: scikit-learn
 Version: 1.5.2
 
-import random as rn
-
 El código esta divido en secciones, por lo que se puede ejecutar en partes. Si se ejecuta en su totalidad tener en cuenta que tarda en promedio unos cinco minutos. 
